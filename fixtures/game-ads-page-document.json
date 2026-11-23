@@ -1,0 +1,548 @@
+{
+  "contractVersion": "2.0.0",
+  "catalogVersion": "2.0.0",
+  "title": "游戏广告投放数据看板（Seed 示例）",
+  "description": "预置的暗色 BI 游戏投放监控大屏，支持按游戏、时间周期实时联动后端 DataSource。",
+  "variables": {
+    "gameId": {
+      "type": "string",
+      "defaultValue": "all",
+      "label": "游戏",
+      "description": "选择要分析的投放游戏"
+    },
+    "dateRange": {
+      "type": "dateRange",
+      "defaultValue": "last14days",
+      "label": "时间周期",
+      "description": "统计时间区间",
+      "options": [
+        {
+          "label": "近 7 天",
+          "value": "last7days"
+        },
+        {
+          "label": "近 14 天",
+          "value": "last14days"
+        },
+        {
+          "label": "近 30 天",
+          "value": "last30days"
+        },
+        {
+          "label": "全部 35 天",
+          "value": "all"
+        }
+      ]
+    }
+  },
+  "queries": {
+    "games": {
+      "resource": "ads.games",
+      "params": {},
+      "targetState": "/data/games"
+    },
+    "summary": {
+      "resource": "ads.summary",
+      "params": {
+        "gameId": {
+          "$var": "gameId"
+        },
+        "dateRange": {
+          "$var": "dateRange"
+        }
+      },
+      "targetState": "/data/summary"
+    },
+    "daily": {
+      "resource": "ads.daily",
+      "params": {
+        "gameId": {
+          "$var": "gameId"
+        },
+        "dateRange": {
+          "$var": "dateRange"
+        }
+      },
+      "targetState": "/data/daily"
+    },
+    "recharge": {
+      "resource": "ads.recharge",
+      "params": {
+        "gameId": {
+          "$var": "gameId"
+        },
+        "dateRange": {
+          "$var": "dateRange"
+        }
+      },
+      "targetState": "/data/recharge"
+    },
+    "traffic": {
+      "resource": "ads.traffic",
+      "params": {
+        "gameId": {
+          "$var": "gameId"
+        },
+        "dateRange": {
+          "$var": "dateRange"
+        }
+      },
+      "targetState": "/data/traffic"
+    },
+    "conversion": {
+      "resource": "ads.conversion",
+      "params": {
+        "gameId": {
+          "$var": "gameId"
+        },
+        "dateRange": {
+          "$var": "dateRange"
+        }
+      },
+      "targetState": "/data/conversion"
+    }
+  },
+  "ui": {
+    "root": "root",
+    "elements": {
+      "root": {
+        "type": "DashboardColumn",
+        "props": {
+          "gap": "md",
+          "width": "full"
+        },
+        "children": [
+          "toolbar-panel",
+          "main-grid",
+          "section-trends"
+        ]
+      },
+      "toolbar-panel": {
+        "type": "DashboardPanel",
+        "props": {
+          "padding": "md",
+          "tone": "elevated"
+        },
+        "children": [
+          "toolbar-row"
+        ]
+      },
+      "toolbar-row": {
+        "type": "DashboardRow",
+        "props": {
+          "gap": "md",
+          "align": "center",
+          "justify": "between",
+          "wrap": true
+        },
+        "children": [
+          "header-title",
+          "filter-group"
+        ]
+      },
+      "header-title": {
+        "type": "Heading",
+        "props": {
+          "text": "游戏广告投放数据看板（Seed 示例）",
+          "subtitle": "口径：ROI = 充值收入 / 广告消耗 · 实时联动后端 DataSource",
+          "level": 2,
+          "badge": "GAME ADS BI"
+        },
+        "children": []
+      },
+      "filter-group": {
+        "type": "DashboardRow",
+        "props": {
+          "gap": "sm",
+          "align": "center",
+          "wrap": true
+        },
+        "children": [
+          "filter-game",
+          "filter-date",
+          "btn-refresh"
+        ]
+      },
+      "filter-game": {
+        "type": "SelectFilter",
+        "props": {
+          "label": "投放游戏",
+          "variable": "gameId",
+          "value": {
+            "$bindState": "/variables/gameId"
+          },
+          "options": {
+            "$state": "/data/games"
+          },
+          "width": 200
+        },
+        "children": []
+      },
+      "filter-date": {
+        "type": "DateRangeFilter",
+        "props": {
+          "label": "周期",
+          "variable": "dateRange",
+          "value": {
+            "$bindState": "/variables/dateRange"
+          }
+        },
+        "children": []
+      },
+      "btn-refresh": {
+        "type": "RefreshButton",
+        "props": {
+          "label": "刷新数据"
+        },
+        "children": []
+      },
+      "main-grid": {
+        "type": "DashboardGrid",
+        "props": {
+          "preset": "sidebar-main-sidebar",
+          "gap": "md"
+        },
+        "children": [
+          "col-left",
+          "col-center",
+          "col-right"
+        ]
+      },
+      "col-left": {
+        "type": "DashboardColumn",
+        "props": {
+          "gap": "md",
+          "width": "full"
+        },
+        "children": [
+          "chart-recharge",
+          "list-channel-metrics"
+        ]
+      },
+      "chart-recharge": {
+        "type": "BarChart",
+        "props": {
+          "title": "充值区间分布",
+          "subtitle": "各付费档位充值金额贡献",
+          "data": {
+            "$state": "/data/recharge"
+          },
+          "xField": "tier",
+          "series": [
+            {
+              "field": "amount",
+              "name": "充值金额",
+              "color": "#818cf8"
+            }
+          ],
+          "yAxisFormat": "currency",
+          "horizontal": true,
+          "height": 250,
+          "showLegend": false,
+          "queryKey": "recharge"
+        },
+        "children": []
+      },
+      "list-channel-metrics": {
+        "type": "MetricList",
+        "props": {
+          "title": "渠道投放效率榜",
+          "data": {
+            "$state": "/data/traffic"
+          },
+          "labelField": "channel",
+          "valueField": "cost",
+          "secondaryField": "roi",
+          "valueFormat": "currency",
+          "secondaryFormat": "ratio",
+          "maxItems": 6,
+          "queryKey": "traffic"
+        },
+        "children": []
+      },
+      "col-center": {
+        "type": "DashboardColumn",
+        "props": {
+          "gap": "md",
+          "width": "full"
+        },
+        "children": [
+          "kpi-grid",
+          "table-daily"
+        ]
+      },
+      "kpi-grid": {
+        "type": "DashboardGrid",
+        "props": {
+          "preset": "equal-4",
+          "gap": "sm"
+        },
+        "children": [
+          "stat-cost",
+          "stat-revenue",
+          "stat-roi",
+          "stat-new-users"
+        ]
+      },
+      "stat-cost": {
+        "type": "StatCard",
+        "props": {
+          "title": "总消耗",
+          "value": {
+            "$state": "/data/summary/totalCost"
+          },
+          "delta": {
+            "$state": "/data/summary/costDelta"
+          },
+          "deltaLabel": "较上周期",
+          "format": "currency",
+          "accent": "cyan",
+          "queryKey": "summary"
+        },
+        "children": []
+      },
+      "stat-revenue": {
+        "type": "StatCard",
+        "props": {
+          "title": "充值收入",
+          "value": {
+            "$state": "/data/summary/revenue"
+          },
+          "delta": {
+            "$state": "/data/summary/revenueDelta"
+          },
+          "deltaLabel": "较上周期",
+          "format": "currency",
+          "accent": "emerald",
+          "queryKey": "summary"
+        },
+        "children": []
+      },
+      "stat-roi": {
+        "type": "StatCard",
+        "props": {
+          "title": "综合 ROI",
+          "value": {
+            "$state": "/data/summary/roi"
+          },
+          "delta": {
+            "$state": "/data/summary/roiDelta"
+          },
+          "deltaLabel": "较上周期",
+          "format": "ratio",
+          "accent": "amber",
+          "queryKey": "summary"
+        },
+        "children": []
+      },
+      "stat-new-users": {
+        "type": "StatCard",
+        "props": {
+          "title": "新增用户",
+          "value": {
+            "$state": "/data/summary/newUsers"
+          },
+          "delta": {
+            "$state": "/data/summary/newUsersDelta"
+          },
+          "deltaLabel": "较上周期",
+          "format": "integer",
+          "accent": "indigo",
+          "queryKey": "summary"
+        },
+        "children": []
+      },
+      "table-daily": {
+        "type": "DataTable",
+        "props": {
+          "title": "每日投放数据明细",
+          "data": {
+            "$state": "/data/daily"
+          },
+          "rowKey": "date",
+          "pageSize": 7,
+          "compact": true,
+          "queryKey": "daily",
+          "columns": [
+            {
+              "key": "date",
+              "title": "日期",
+              "dataIndex": "date",
+              "sortable": true,
+              "width": 112,
+              "fixed": "left"
+            },
+            {
+              "key": "cost",
+              "title": "消耗",
+              "dataIndex": "cost",
+              "format": "currency",
+              "sortable": true,
+              "align": "right",
+              "width": 112
+            },
+            {
+              "key": "revenue",
+              "title": "收入",
+              "dataIndex": "revenue",
+              "format": "currency",
+              "sortable": true,
+              "align": "right",
+              "width": 112
+            },
+            {
+              "key": "roi",
+              "title": "ROI",
+              "dataIndex": "roi",
+              "format": "ratio",
+              "sortable": true,
+              "align": "right",
+              "width": 88
+            },
+            {
+              "key": "newUsers",
+              "title": "新增",
+              "dataIndex": "newUsers",
+              "format": "integer",
+              "sortable": true,
+              "align": "right",
+              "width": 92
+            },
+            {
+              "key": "payRate",
+              "title": "付费率",
+              "dataIndex": "payRate",
+              "format": "percent",
+              "sortable": true,
+              "align": "right",
+              "width": 92
+            },
+            {
+              "key": "cpa",
+              "title": "CPA",
+              "dataIndex": "cpa",
+              "format": "currency",
+              "sortable": true,
+              "align": "right",
+              "width": 90
+            }
+          ]
+        },
+        "children": []
+      },
+      "col-right": {
+        "type": "DashboardColumn",
+        "props": {
+          "gap": "md",
+          "width": "full"
+        },
+        "children": [
+          "list-conversion",
+          "chart-channel-donut"
+        ]
+      },
+      "list-conversion": {
+        "type": "ProgressList",
+        "props": {
+          "title": "核心转化漏斗",
+          "data": {
+            "$state": "/data/conversion"
+          },
+          "labelField": "stage",
+          "valueField": "count",
+          "percentField": "rate",
+          "valueFormat": "integer",
+          "accent": "emerald",
+          "queryKey": "conversion"
+        },
+        "children": []
+      },
+      "chart-channel-donut": {
+        "type": "DonutChart",
+        "props": {
+          "title": "流量渠道占比",
+          "subtitle": "按广告投放消耗统计",
+          "data": {
+            "$state": "/data/traffic"
+          },
+          "nameField": "channel",
+          "valueField": "cost",
+          "valueFormat": "currency",
+          "centerLabel": "渠道消耗",
+          "height": 250,
+          "showLegend": true,
+          "queryKey": "traffic"
+        },
+        "children": []
+      },
+      "section-trends": {
+        "type": "DashboardGrid",
+        "props": {
+          "preset": "equal-2",
+          "gap": "md"
+        },
+        "children": [
+          "chart-daily-trend",
+          "chart-roi-trend"
+        ]
+      },
+      "chart-daily-trend": {
+        "type": "LineChart",
+        "props": {
+          "title": "每日消耗与充值收入趋势",
+          "subtitle": "单位：人民币 (¥)",
+          "data": {
+            "$state": "/data/daily"
+          },
+          "xField": "date",
+          "series": [
+            {
+              "field": "cost",
+              "name": "广告消耗",
+              "color": "#38bdf8",
+              "smooth": true,
+              "area": true
+            },
+            {
+              "field": "revenue",
+              "name": "充值收入",
+              "color": "#34d399",
+              "smooth": true,
+              "area": true
+            }
+          ],
+          "yAxisFormat": "currency",
+          "height": 290,
+          "showLegend": true,
+          "queryKey": "daily"
+        },
+        "children": []
+      },
+      "chart-roi-trend": {
+        "type": "LineChart",
+        "props": {
+          "title": "每日 ROI 走势",
+          "subtitle": "基准线 1.0x 为回本线",
+          "data": {
+            "$state": "/data/daily"
+          },
+          "xField": "date",
+          "series": [
+            {
+              "field": "roi",
+              "name": "当日 ROI",
+              "color": "#f59e0b",
+              "smooth": true,
+              "area": true
+            }
+          ],
+          "yAxisFormat": "ratio",
+          "height": 290,
+          "showLegend": true,
+          "queryKey": "daily"
+        },
+        "children": []
+      }
+    }
+  }
+}

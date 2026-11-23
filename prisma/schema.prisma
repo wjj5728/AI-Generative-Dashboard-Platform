@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Dashboard {
+  id                String              @id @default(cuid())
+  title             String
+  description       String              @default("")
+  ownerId           String
+  status            String              @default("draft")
+  currentRevision   Int                 @default(1)
+  publishedRevision Int?
+  schemaVersion     String
+  catalogVersion    String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  revisions         DashboardRevision[]
+
+  @@index([ownerId])
+  @@index([updatedAt])
+}
+
+model DashboardRevision {
+  id                String    @id @default(cuid())
+  dashboardId       String
+  revision          Int
+  pageDocument      String
+  changeDescription String    @default("")
+  createdAt         DateTime  @default(now())
+  dashboard         Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@unique([dashboardId, revision])
+  @@index([dashboardId])
+}

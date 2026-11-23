@@ -1,0 +1,44 @@
+{
+  "name": "ai-generative-dashboard-platform",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"pnpm --filter @ai-dashboard/server dev\" \"pnpm --filter @ai-dashboard/web dev\"",
+    "build": "pnpm --filter @ai-dashboard/contracts build && pnpm --filter @ai-dashboard/datasource-contract build && pnpm --filter @ai-dashboard/component-catalog build && pnpm --filter @ai-dashboard/server build && pnpm --filter @ai-dashboard/web build",
+    "start": "node apps/server/dist/index.js",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
+    "db:generate": "prisma generate --schema=prisma/schema.prisma",
+    "db:push": "prisma db push --schema=prisma/schema.prisma",
+    "db:seed": "tsx prisma/seed.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ai-dashboard/component-catalog": "workspace:*",
+    "@ai-dashboard/contracts": "workspace:*",
+    "@ai-dashboard/datasource-contract": "workspace:*",
+    "@ai-dashboard/server": "workspace:*",
+    "@fastify/cors": "^11.0.1",
+    "@json-render/core": "0.23.2",
+    "@prisma/client": "^6.6.0",
+    "fastify": "^5.3.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.14.0",
+    "concurrently": "^9.1.2",
+    "dotenv": "^16.5.0",
+    "eslint": "^9.24.0",
+    "prisma": "^6.6.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.0",
+    "vitest": "^3.1.1"
+  }
+}

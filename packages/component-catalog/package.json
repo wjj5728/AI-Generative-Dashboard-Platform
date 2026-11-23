@@ -1,0 +1,24 @@
+{
+  "name": "@ai-dashboard/component-catalog",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ai-dashboard/contracts": "workspace:*",
+    "@ai-dashboard/datasource-contract": "workspace:*",
+    "@json-render/core": "0.23.2",
+    "@json-render/react": "0.23.2",
+    "zod": "^4.3.6"
+  }
+}
