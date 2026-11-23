@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,magenta \"pnpm --filter @ai-dashboard/server dev\" \"pnpm --filter @ai-dashboard/web dev\"",
-    "build": "pnpm --filter @ai-dashboard/contracts build && pnpm --filter @ai-dashboard/datasource-contract build && pnpm --filter @ai-dashboard/component-catalog build && pnpm --filter @ai-dashboard/server build && pnpm --filter @ai-dashboard/web build",
+    "build": "prisma generate --schema=prisma/schema.prisma && pnpm --filter @ai-dashboard/contracts build && pnpm --filter @ai-dashboard/datasource-contract build && pnpm --filter @ai-dashboard/component-catalog build && pnpm --filter @ai-dashboard/server build && pnpm --filter @ai-dashboard/web build",
     "start": "node apps/server/dist/index.js",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",
@@ -26,6 +26,7 @@
     "@json-render/core": "0.23.2",
     "@prisma/client": "^6.6.0",
     "fastify": "^5.3.2",
+    "prisma": "^6.6.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
