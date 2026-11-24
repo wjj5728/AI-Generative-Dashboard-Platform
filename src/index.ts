@@ -9,8 +9,8 @@ let appPromise: Promise<FastifyInstance> | null = null;
 
 async function loadEmbeddedIndexHtml(): Promise<string | undefined> {
   try {
-    // @ts-expect-error generated at build time into apps/server/dist/embedded-index.js
-    const mod = await import('../apps/server/dist/embedded-index.js');
+    const modulePath = '../apps/server/dist/embedded-index.js';
+    const mod = (await import(modulePath)) as { EMBEDDED_INDEX_HTML?: unknown };
     return typeof mod.EMBEDDED_INDEX_HTML === 'string'
       ? mod.EMBEDDED_INDEX_HTML
       : undefined;
