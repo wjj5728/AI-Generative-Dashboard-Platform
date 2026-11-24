@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,magenta \"pnpm --filter @ai-dashboard/server dev\" \"pnpm --filter @ai-dashboard/web dev\"",
-    "build": "prisma generate --schema=prisma/schema.prisma && pnpm --filter @ai-dashboard/contracts build && pnpm --filter @ai-dashboard/datasource-contract build && pnpm --filter @ai-dashboard/component-catalog build && pnpm --filter @ai-dashboard/server build && pnpm --filter @ai-dashboard/web build && node -e \"const fs=require('fs');fs.rmSync('public',{recursive:true,force:true});fs.cpSync('apps/web/dist','public',{recursive:true});\"",
+    "build": "prisma generate --schema=prisma/schema.prisma && pnpm --filter @ai-dashboard/contracts build && pnpm --filter @ai-dashboard/datasource-contract build && pnpm --filter @ai-dashboard/component-catalog build && pnpm --filter @ai-dashboard/server build && pnpm --filter @ai-dashboard/web build && node -e \"const fs=require('node:fs');fs.rmSync('public',{recursive:true,force:true});fs.cpSync('apps/web/dist','public',{recursive:true});const html=fs.readFileSync('apps/web/dist/index.html','utf8');fs.writeFileSync('apps/server/dist/embedded-index.js','export const EMBEDDED_INDEX_HTML = '+JSON.stringify(html)+';\\n','utf8');\"",
     "start": "node apps/server/dist/index.js",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\" \"tests/**/*.ts\"",

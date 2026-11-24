@@ -11,6 +11,7 @@ import {
 } from './datasource/registry.js';
 import { ensureDatabaseReady } from './repositories/bootstrap.js';
 import { DashboardRepository } from './repositories/dashboard-repository.js';
+import { FallbackDashboardRepository } from './repositories/fallback-repository.js';
 import { getPrismaClient } from './repositories/prisma.js';
 import { registerCatalogRoutes } from './routes/catalog.js';
 import { registerDashboardRoutes } from './routes/dashboards.js';
@@ -26,8 +27,12 @@ export interface BuildAppOptions {
   logger?: boolean;
   /** Automatically create tables & seed if empty (default: true when using default Prisma client) */
   autoBootstrap?: boolean;
-  /** Serve built frontend static files from apps/web/dist when present (default: true) */
+  /** Serve built web static assets from apps/web/dist or public/ when present (default: true) */
   serveStaticWeb?: boolean;
+  /** Optional embedded index.html string for serverless SPA fallback */
+  embeddedIndexHtml?: string;
+  /** Force serverless /tmp JSON fallback repository without loading Prisma native binary */
+  useFallbackRepository?: boolean;
 }
 
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
@@ -59,11 +64,24 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     },
   );
 
-  const prisma = options.prisma ?? getPrismaClient();
-  if (options.autoBootstrap ?? !options.prisma) {
-    await ensureDatabaseReady(prisma);
+  let repository: DashboardRepository;
+  if (options.useFallbackRepository) {
+    repository = new FallbackDashboardRepository() as unknown as DashboardRepository;
+  } else {
+    try {
+      const prisma = options.prisma ?? getPrismaClient();
+      if (options.autoBootstrap ?? !options.prisma) {
+        await ensureDatabaseReady(prisma);
+      }
+      repository = new DashboardRepository(prisma);
+    } catch (err) {
+      console.warn(
+        '[buildApp] Prisma initialization failed in serverless runtime, falling back to /tmp JSON store:',
+        err instanceof Error ? err.message : err,
+      );
+      repository = new FallbackDashboardRepository() as unknown as DashboardRepository;
+    }
   }
-  const repository = new DashboardRepository(prisma);
   const aiProvider = options.aiProvider ?? createAIProviderFromEnv();
   const dataSourceRegistry =
     options.dataSourceRegistry ?? createDefaultDataSourceRegistry();
@@ -98,8 +116,9 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
       candidateDirs.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) ??
       candidateDirs[0];
     const indexHtmlPath = path.join(webDistDir, 'index.html');
+    const hasDiskIndex = fs.existsSync(indexHtmlPath);
 
-    if (fs.existsSync(indexHtmlPath)) {
+    if (hasDiskIndex || options.embeddedIndexHtml) {
       const MIME_TYPES: Record<string, string> = {
         '.html': 'text/html; charset=utf-8',
         '.js': 'application/javascript; charset=utf-8',
@@ -118,24 +137,29 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
           });
         }
 
-        const cleanPath = request.url.split('?')[0];
-        const candidatePath = path.resolve(webDistDir, `.${cleanPath}`);
-        if (
-          candidatePath.startsWith(webDistDir) &&
-          fs.existsSync(candidatePath) &&
-          fs.statSync(candidatePath).isFile()
-        ) {
-          const ext = path.extname(candidatePath);
-          reply.header(
-            'Content-Type',
-            MIME_TYPES[ext] || 'application/octet-stream',
-          );
-          return reply.send(fs.readFileSync(candidatePath));
+        if (hasDiskIndex) {
+          const cleanPath = request.url.split('?')[0];
+          const candidatePath = path.resolve(webDistDir, `.${cleanPath}`);
+          if (
+            candidatePath.startsWith(webDistDir) &&
+            fs.existsSync(candidatePath) &&
+            fs.statSync(candidatePath).isFile()
+          ) {
+            const ext = path.extname(candidatePath);
+            reply.header(
+              'Content-Type',
+              MIME_TYPES[ext] || 'application/octet-stream',
+            );
+            return reply.send(fs.readFileSync(candidatePath));
+          }
         }
 
         // SPA fallback to index.html
         reply.header('Content-Type', 'text/html; charset=utf-8');
-        return reply.send(fs.readFileSync(indexHtmlPath));
+        if (hasDiskIndex) {
+          return reply.send(fs.readFileSync(indexHtmlPath));
+        }
+        return reply.send(options.embeddedIndexHtml);
       });
     }
   }

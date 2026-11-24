@@ -7,13 +7,28 @@ void Fastify;
 
 let appPromise: Promise<FastifyInstance> | null = null;
 
+async function loadEmbeddedIndexHtml(): Promise<string | undefined> {
+  try {
+    // @ts-expect-error generated at build time into apps/server/dist/embedded-index.js
+    const mod = await import('../apps/server/dist/embedded-index.js');
+    return typeof mod.EMBEDDED_INDEX_HTML === 'string'
+      ? mod.EMBEDDED_INDEX_HTML
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 async function getReadyApp(): Promise<FastifyInstance> {
   if (!appPromise) {
     appPromise = (async () => {
+      const embeddedIndexHtml = await loadEmbeddedIndexHtml();
       const app = await buildApp({
         logger: false,
         autoBootstrap: true,
         serveStaticWeb: true,
+        useFallbackRepository: Boolean(process.env.VERCEL),
+        embeddedIndexHtml,
       });
       await app.ready();
       return app;

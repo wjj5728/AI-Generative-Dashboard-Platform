@@ -8,13 +8,21 @@ let prismaInstance: PrismaClient | null = null;
  * so relative SQLite URLs automatically fall back to `file:/tmp/ai-dashboard.db`.
  */
 export function resolveDatabaseUrl(): string {
-  const configured = process.env.DATABASE_URL;
+  const configured = process.env.DATABASE_URL?.trim();
   if (process.env.VERCEL) {
-    if (!configured || configured.startsWith('file:./') || configured.startsWith('file:dev.db')) {
+    if (
+      !configured ||
+      !configured.startsWith('file:') ||
+      configured.startsWith('file:./') ||
+      configured.startsWith('file:dev.db')
+    ) {
       return 'file:/tmp/ai-dashboard.db';
     }
   }
-  return configured || 'file:./dev.db';
+  if (!configured || !configured.startsWith('file:')) {
+    return 'file:./dev.db';
+  }
+  return configured;
 }
 
 export function getPrismaClient(): PrismaClient {

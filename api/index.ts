@@ -11,6 +11,7 @@ async function getReadyApp(): Promise<FastifyInstance> {
         logger: false,
         autoBootstrap: true,
         serveStaticWeb: false,
+        useFallbackRepository: Boolean(process.env.VERCEL),
       });
       await app.ready();
       return app;
