@@ -86,10 +86,17 @@ export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyIn
     authResolver,
   });
 
-  // Optional single-process production static hosting for apps/web/dist (Render / Docker / node dist/index.js)
-  if (options.serveStaticWeb !== false && !process.env.VERCEL) {
+  // Production static hosting for apps/web/dist or public/ (Vercel / Render / Docker / node dist/index.js)
+  if (options.serveStaticWeb !== false) {
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
-    const webDistDir = path.resolve(currentDir, '../../web/dist');
+    const candidateDirs = [
+      path.resolve(currentDir, '../../web/dist'),
+      path.resolve(process.cwd(), 'apps/web/dist'),
+      path.resolve(process.cwd(), 'public'),
+    ];
+    const webDistDir =
+      candidateDirs.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) ??
+      candidateDirs[0];
     const indexHtmlPath = path.join(webDistDir, 'index.html');
 
     if (fs.existsSync(indexHtmlPath)) {
